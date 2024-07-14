@@ -1,6 +1,7 @@
 package com.example.calorificomputervision
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.calorificomputervision.data.AppDatabase
 import com.example.calorificomputervision.repository.UserRepository
+import com.example.calorificomputervision.ui.pages.CameraPermissionHandler
+import com.example.calorificomputervision.ui.pages.CameraScreen
 import com.example.calorificomputervision.ui.pages.DashbourdScreen
 import com.example.calorificomputervision.ui.pages.LoginScreen
 import com.example.calorificomputervision.ui.pages.RegisterScreen
@@ -71,8 +74,24 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("login") {
                                         popUpTo("dashboard/{username}") { inclusive = true }
                                     }
-                                }
+                                },
+                                onTakePhoto = { navController.navigate("camera")}
                             )
+                        }
+                        composable("camera") {
+                            CameraPermissionHandler {
+                                CameraScreen(
+                                    onImageProcessed = { processedBitmap ->
+                                        // Handle the processed bitmap here
+                                        // You might want to navigate to a new screen to display the result
+                                        navController.navigate("result")
+                                    },
+                                    onError = { exception ->
+                                        navController.popBackStack()
+                                        Log.e("CameraScreen", "Error capturing image", exception)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

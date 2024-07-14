@@ -67,6 +67,14 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
+    val camerax_version = "1.2.3"
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
+
+
+
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")

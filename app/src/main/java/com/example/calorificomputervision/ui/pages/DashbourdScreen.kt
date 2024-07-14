@@ -15,7 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun DashbourdScreen(username: String, onLogout: () -> Unit) {
+fun DashbourdScreen(
+    username: String,
+    onLogout: () -> Unit,
+    onTakePhoto: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -27,6 +31,10 @@ fun DashbourdScreen(username: String, onLogout: () -> Unit) {
             text = "Hey, $username",
             style = MaterialTheme.typography.headlineMedium
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onTakePhoto) {
+            Text("Take a photo of food")
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onLogout) {
             Text("Logout")
