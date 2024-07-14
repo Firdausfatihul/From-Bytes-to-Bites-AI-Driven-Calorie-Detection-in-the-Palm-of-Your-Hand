@@ -13,7 +13,9 @@ data class LoginUiState (
     val password: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val success: Boolean = false
+    val success: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val loggedInUsername: String? = null
 )
 
 class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
@@ -59,7 +61,7 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
                 val user = userRepository.loginUser(_uiState.value.username, _uiState.value.password)
                 if (user != null) {
                     _uiState.update {
-                        it.copy(isLoading = false, success = true)
+                        it.copy(isLoading = false, success = true, isLoggedIn = true, loggedInUsername = user.username)
                     }
                 } else {
                     _uiState.update {
