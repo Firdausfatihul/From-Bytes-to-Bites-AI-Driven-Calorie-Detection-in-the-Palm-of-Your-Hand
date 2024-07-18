@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,17 +82,15 @@ class MainActivity : ComponentActivity() {
                         composable("camera") {
                             CameraPermissionHandler {
                                 CameraScreen(
-                                    onImageProcessed = { processedBitmap ->
-                                        // Handle the processed bitmap here
-                                        // You might want to navigate to a new screen to display the result
-                                        navController.navigate("result")
-                                    },
                                     onError = { exception ->
                                         navController.popBackStack()
                                         Log.e("CameraScreen", "Error capturing image", exception)
                                     }
                                 )
                             }
+                        }
+                        composable("result"){
+                            Text("Image processed successfully!")
                         }
                     }
                 }

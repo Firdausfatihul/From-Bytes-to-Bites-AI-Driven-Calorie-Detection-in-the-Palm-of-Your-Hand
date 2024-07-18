@@ -73,7 +73,7 @@ dependencies {
     implementation("androidx.camera:camera-view:$camerax_version")
     implementation("androidx.exifinterface:exifinterface:1.3.6")
 
-
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
