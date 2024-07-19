@@ -43,7 +43,7 @@ From Bytes to Bites is an innovative Android application that brings the power o
 ### Backend API
 1. Clone the API repository:
    ```
-   git clone https://github.com/Firdausfatihul/bytestobyte_api.git
+   git clone https://github.com/Firdausfatihul/bytestobite_api
    ```
 2. Set up a Python virtual environment and install dependencies:
    ```
