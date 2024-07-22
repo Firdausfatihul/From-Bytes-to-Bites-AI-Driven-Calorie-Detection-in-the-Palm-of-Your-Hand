@@ -25,8 +25,12 @@ import com.example.calorificomputervision.repository.UserRepository
 import com.example.calorificomputervision.ui.pages.CameraPermissionHandler
 import com.example.calorificomputervision.ui.pages.CameraScreen
 import com.example.calorificomputervision.ui.pages.DashbourdScreen
+import com.example.calorificomputervision.ui.pages.HistoryScreen
 import com.example.calorificomputervision.ui.pages.LoginScreen
 import com.example.calorificomputervision.ui.pages.RegisterScreen
+import com.example.calorificomputervision.viewmodel.CameraViewModel
+import com.example.calorificomputervision.viewmodel.CameraViewModelFactory
+import com.example.calorificomputervision.viewmodel.HistoryViewModel
 import com.example.calorificomputervision.viewmodel.LoginViewModelFactory
 
 
@@ -37,6 +41,7 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(applicationContext)
         val userRepository = UserRepository(database.userDao())
         val loginViewModelFactory = LoginViewModelFactory(userRepository)
+        val cameraViewModelFactory = CameraViewModelFactory(database.detectedObjectDao())
 
         setContent {
             CalorifiComputerVisionTheme {
@@ -76,12 +81,15 @@ class MainActivity : ComponentActivity() {
                                         popUpTo("dashboard/{username}") { inclusive = true }
                                     }
                                 },
-                                onTakePhoto = { navController.navigate("camera")}
+                                onTakePhoto = { navController.navigate("camera")},
+                                onSeeHistory = { navController.navigate("history")}
                             )
                         }
                         composable("camera") {
+                            val viewModel: CameraViewModel = viewModel(factory = cameraViewModelFactory)
                             CameraPermissionHandler {
                                 CameraScreen(
+                                    viewModel = viewModel,
                                     onError = { exception ->
                                         navController.popBackStack()
                                         Log.e("CameraScreen", "Error capturing image", exception)
@@ -89,8 +97,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        composable("result"){
-                            Text("Image processed successfully!")
+                        composable("history") {
+                            val viewModel: HistoryViewModel = viewModel(factory = cameraViewModelFactory)
+                            HistoryScreen(viewModel = viewModel)
                         }
                     }
                 }

@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 fun DashbourdScreen(
     username: String,
     onLogout: () -> Unit,
-    onTakePhoto: () -> Unit
+    onTakePhoto: () -> Unit,
+    onSeeHistory: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -34,6 +35,10 @@ fun DashbourdScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onTakePhoto) {
             Text("Take a photo of food")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onSeeHistory) {
+            Text("See History Consumption")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onLogout) {

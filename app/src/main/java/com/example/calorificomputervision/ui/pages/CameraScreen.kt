@@ -18,8 +18,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +41,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.calorificomputervision.model.DetectedObject
+import com.example.calorificomputervision.viewmodel.CameraViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,11 +59,12 @@ import java.util.Locale
 import java.util.concurrent.Executor
 
 sealed class Result {
-    data class Success(val bitmap: Bitmap) : Result()
+    data class Success(val bitmap: Bitmap, val objects: List<DetectedObject>) : Result()
     data class Error(val exception: Exception) : Result()
 }
 @Composable
 fun CameraScreen(
+    viewModel: CameraViewModel,
     onError: (Exception) -> Unit
 ) {
     val context = LocalContext.current
@@ -68,8 +73,9 @@ fun CameraScreen(
 
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     var processedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var detectedObjects by remember { mutableStateOf<List<DetectedObject>?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
-    var currentRotation by remember { mutableStateOf(Surface.ROTATION_0) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     val preview = Preview.Builder().build()
     val previewView = remember { PreviewView(context) }
@@ -97,140 +103,133 @@ fun CameraScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
-            factory = { previewView },
-            modifier = Modifier.fillMaxSize(),
-            update = { view ->
-                view.post {
-                    currentRotation = view.display?.rotation ?: Surface.ROTATION_0
-                    imageCapture.targetRotation = currentRotation
+            factory = { PreviewView(it) },
+            modifier = Modifier.fillMaxSize()
+        ) { previewView ->
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
                 }
-            }
-        )
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        cameraSelector,
+                        preview,
+                        imageCapture
+                    )
+                } catch (exc: Exception) {
+                    onError(exc)
+                }
+            }, ContextCompat.getMainExecutor(context))
+        }
 
         when {
             isProcessing -> {
-                Log.d(TAG, "Showing processing indicator")
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
             processedImageBitmap != null -> {
-                Log.d(TAG, "Displaying processed image")
-                Card(
+                Image(
+                    bitmap = processedImageBitmap!!.asImageBitmap(),
+                    contentDescription = "Processed image",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Button(
+                    onClick = { showConfirmDialog = true },
                     modifier = Modifier
-                        .fillMaxSize()
+                        .align(Alignment.BottomCenter)
                         .padding(16.dp)
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Image(
-                            bitmap = processedImageBitmap!!.asImageBitmap(),
-                            contentDescription = "Processed image",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(10.dp)
-                        )
-                        Button(
-                            onClick = {
-                                Log.d(TAG, "Take Another Photo button clicked")
-                                processedImageBitmap = null
-                                capturedImageUri = null
-                            },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 20.dp)
-                        ) {
-                            Text("Take Another Photo")
-                        }
-                    }
+                    Text("Confirm")
                 }
             }
             capturedImageUri != null -> {
-                Log.d(TAG, "Displaying captured image")
-                capturedImageUri?.let { uri ->
-                    val bitmap = remember(uri) {
-                        getCorrectedBitmap(context, uri)
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "Captured image",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(10.dp)
-                            )
-                            Button(
-                                onClick = {
-                                    Log.d(TAG, "Process Image button clicked")
-                                    coroutineScope.launch {
-                                        try {
-                                            isProcessing = true
-                                            val result = withContext(Dispatchers.IO) {
-                                                processImageWithYOLOv8(context, uri)
-                                            }
-                                            withContext(Dispatchers.Main) {
-                                                isProcessing = false
-                                                when (result) {
-                                                    is Result.Success -> {
-                                                        Log.d(TAG, "Image processed successfully")
-                                                        processedImageBitmap = result.bitmap
-                                                    }
-                                                    is Result.Error -> {
-                                                        Log.e(TAG, "Error processing image", result.exception)
-                                                        onError(result.exception)
-                                                    }
-                                                }
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.e(TAG, "Unexpected error during image processing", e)
-                                            withContext(Dispatchers.Main) {
-                                                isProcessing = false
-                                                onError(e)
-                                            }
-                                        }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(bottom = 20.dp)
-                            ) {
-                                Text("Process Image")
+                Image(
+                    bitmap = remember(capturedImageUri) {
+                        BitmapFactory.decodeFile(capturedImageUri?.path)
+                    }.asImageBitmap(),
+                    contentDescription = "Captured image",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isProcessing = true
+                            try {
+                                val result = processImageWithYOLOv8(context, capturedImageUri!!)
+                                processedImageBitmap = result.first
+                                detectedObjects = result.second
+                            } catch (e: Exception) {
+                                onError(e)
+                            } finally {
+                                isProcessing = false
                             }
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                ) {
+                    Text("Process Image")
                 }
             }
             else -> {
-                Log.d(TAG, "Showing Take Photo button")
                 Button(
                     onClick = {
-                        Log.d(TAG, "Take Photo button clicked")
                         takePhoto(
                             imageCapture,
                             context.getOutputDirectory(),
                             ContextCompat.getMainExecutor(context),
-                            { uri ->
-                                Log.d(TAG, "Photo captured: $uri")
-                                capturedImageUri = uri
-                            },
-                            { e ->
-                                Log.e(TAG, "Error taking photo", e)
-                                onError(e)
-                            }
+                            { uri -> capturedImageUri = uri },
+                            { exc -> onError(exc) }
                         )
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 20.dp)
+                        .padding(16.dp)
                 ) {
                     Text("Take Photo")
                 }
             }
+        }
+
+        if (showConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false },
+                title = { Text("Detected Objects") },
+                text = {
+                    Column {
+                        detectedObjects?.forEach { obj ->
+                            Text("${obj.name}: ${obj.calories.toInt()} calories")
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                detectedObjects?.let { viewModel.saveObjects(it) }
+                                showConfirmDialog = false
+                                // Reset the screen state
+                                processedImageBitmap = null
+                                capturedImageUri = null
+                                detectedObjects = null
+                            }
+                        }
+                    ) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showConfirmDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
@@ -306,7 +305,7 @@ private fun Context.getOutputDirectory(): File {
     return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
 }
 
-private suspend fun processImageWithYOLOv8(context: Context, uri: Uri): Result {
+private suspend fun processImageWithYOLOv8(context: Context, uri: Uri): Pair<Bitmap, List<DetectedObject>> {
     val file = File(uri.path!!)
     val requestBody = MultipartBody.Builder()
         .setType(MultipartBody.FORM)
@@ -314,31 +313,43 @@ private suspend fun processImageWithYOLOv8(context: Context, uri: Uri): Result {
         .build()
 
     val request = Request.Builder()
-        .url("https://df9a-182-3-37-38.ngrok-free.app/process_image")
+        .url("https://0c5a-182-3-45-54.ngrok-free.app/process_image")
         .post(requestBody)
         .build()
 
     val client = OkHttpClient()
 
-    return try {
+    return withContext(Dispatchers.IO) {
         val response = client.newCall(request).execute()
         if (response.isSuccessful) {
             val jsonResponse = JSONObject(response.body?.string() ?: "")
             val imageUrl = jsonResponse.getString("image_url")
+            val objectsArray = jsonResponse.getJSONArray("objects")
+            val detectedObjects = mutableListOf<DetectedObject>()
+
+            for (i in 0 until objectsArray.length()) {
+                val objectJson = objectsArray.getJSONObject(i)
+                detectedObjects.add(
+                    DetectedObject(
+                        name = objectJson.getString("name"),
+                        volumeCm3 = objectJson.getDouble("volume_cm3"),
+                        massGrams = objectJson.getDouble("mass_grams"),
+                        calories = objectJson.getDouble("calories")
+                    )
+                )
+            }
 
             // Download the processed image
             val processedImageRequest = Request.Builder().url(imageUrl).build()
             val processedImageResponse = client.newCall(processedImageRequest).execute()
             if (processedImageResponse.isSuccessful) {
                 val processedBitmap = BitmapFactory.decodeStream(processedImageResponse.body?.byteStream())
-                Result.Success(processedBitmap)
+                Pair(processedBitmap, detectedObjects)
             } else {
-                Result.Error(IOException("Failed to download processed image"))
+                throw IOException("Failed to download processed image")
             }
         } else {
-            Result.Error(IOException("Error processing image: ${response.code}"))
+            throw IOException("Error processing image: ${response.code}")
         }
-    } catch (e: Exception) {
-        Result.Error(e)
     }
 }
