@@ -313,7 +313,7 @@ private suspend fun processImageWithYOLOv8(context: Context, uri: Uri): Pair<Bit
         .build()
 
     val request = Request.Builder()
-        .url("https://0c5a-182-3-45-54.ngrok-free.app/process_image")
+        .url("https://e358-182-3-45-54.ngrok-free.app/process_image")
         .post(requestBody)
         .build()
 

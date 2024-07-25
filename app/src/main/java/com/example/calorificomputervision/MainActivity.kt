@@ -5,7 +5,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -73,6 +80,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("dashboard/{username}") { backStackEntry ->
+                            val viewModel: HistoryViewModel = viewModel(factory = cameraViewModelFactory)
                             val username = backStackEntry.arguments?.getString("username") ?: ""
                             DashbourdScreen(
                                 username = username,
@@ -82,7 +90,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onTakePhoto = { navController.navigate("camera")},
-                                onSeeHistory = { navController.navigate("history")}
+                                onSeeHistory = { navController.navigate("history")},
+                                historyViewModel = viewModel
                             )
                         }
                         composable("camera") {
