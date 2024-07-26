@@ -67,6 +67,10 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
+    implementation("com.patrykandpatrick.vico:compose:1.6.5")
+    implementation("com.patrykandpatrick.vico:compose-m3:1.6.5")
+    implementation("com.patrykandpatrick.vico:core:1.6.5")
+
     val camerax_version = "1.2.3"
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")

@@ -1,6 +1,7 @@
 package com.example.calorificomputervision.ui.pages
 
 import android.graphics.Outline
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.calorificomputervision.viewmodel.LoginViewModel
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import com.example.calorificomputervision.ui.utils.NeuromorphicShadowModifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +40,10 @@ fun LoginScreen(
     onLoginSuccess: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
-            uiState.loggedInUsername?.let{ username ->
+            uiState.loggedInUsername?.let { username ->
                 onLoginSuccess(username)
             }
         }
@@ -51,48 +55,61 @@ fun LoginScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    )   {
+    ) {
         Text(
             text = "Login",
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineMedium.copy(
+                color = Color.Black
+            ),
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        // Custom TextField with neuromorphic style
         OutlinedTextField(
             value = uiState.username,
             onValueChange = viewModel::updateUsername,
-            label = {
-                Text(
-                    "Username"
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            label = { Text("Username") },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = Color.Transparent, // Make the background transparent
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Transparent) // Ensure background is transparent
+                .then(NeuromorphicShadowModifier())
+                .padding(4.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Custom TextField with neuromorphic style
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::updatePassword,
-            label = {
-                Text(
-                    "Password"
-                )
-            },
+            label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            )
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                containerColor = Color.Transparent, // Make the background transparent
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.Gray
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Transparent) // Ensure background is transparent
+                .then(NeuromorphicShadowModifier())
+                .padding(4.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Neuromorphic style Button
         Button(
             onClick = viewModel::login,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(NeuromorphicShadowModifier())
+                .padding(4.dp),
             enabled = !uiState.isLoading
         ) {
             if (uiState.isLoading) {
@@ -103,11 +120,15 @@ fun LoginScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        
+
+        // Neuromorphic style TextButton
         TextButton(
-            onClick = onRegisterClick
+            onClick = onRegisterClick,
+            modifier = Modifier
+                .then(NeuromorphicShadowModifier())
+                .padding(4.dp)
         ) {
-            Text("Dont't have an account? Register here")
+            Text("Don't have an account? Register here")
         }
 
         uiState.error?.let { error: String ->

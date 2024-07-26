@@ -1,38 +1,31 @@
 package com.example.calorificomputervision.ui.pages
 
-import android.graphics.drawable.Icon
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDismissState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.calorificomputervision.data.AppDatabase
 import com.example.calorificomputervision.ui.components.ReusableNavigationBar
-import com.example.calorificomputervision.viewmodel.CameraViewModelFactory
+import com.example.calorificomputervision.ui.utils.NeuromorphicShadowModifier
 import com.example.calorificomputervision.viewmodel.HistoryViewModel
 
 @Composable
@@ -49,7 +42,7 @@ fun DashbourdScreen(
     Scaffold(
         bottomBar = {
             ReusableNavigationBar(
-                selecetedItem = selectedItem,
+                selectedItem = selectedItem,
                 onItemSelected = { selectedItem = it }
             )
         }
@@ -61,7 +54,7 @@ fun DashbourdScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        ) {
             Spacer(modifier = Modifier.height(16.dp))
             when (selectedItem) {
                 0 -> {
@@ -75,6 +68,8 @@ fun DashbourdScreen(
     }
 }
 
+
+
 @Composable
 fun HomeContent(onTakePhoto: () -> Unit, onLogout: () -> Unit, username: String) {
     Column(
@@ -86,15 +81,48 @@ fun HomeContent(onTakePhoto: () -> Unit, onLogout: () -> Unit, username: String)
     ) {
         Text(
             text = "Hey, $username",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                shadow = Shadow(
+                    color = Color.Gray,
+                    offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                    blurRadius = 4f
+                ),
+                textAlign = TextAlign.Center,
+                color = Color.Black
+            )
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onTakePhoto) {
-            Text("Take a photo of food")
-        }
+        NeuromorphicButton(text = "Take a photo of food", onClick = onTakePhoto)
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onLogout) {
-            Text("Logout")
-        }
+        NeuromorphicButton(text = "Logout", onClick = onLogout)
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun NeuromorphicButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+            .height(56.dp)
+            .then(NeuromorphicShadowModifier()),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                shadow = Shadow(
+                    color = Color.Gray,
+                    offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                    blurRadius = 4f
+                )
+            )
+        )
     }
 }
